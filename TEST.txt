@@ -1,39 +1,127 @@
--- 1. Gumawa ng ScreenGui (Ang container ng UI)
+-- 1. SCREEN GUI CONTROLLER
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "TestUI"
--- Subukang i-protect ang UI para hindi basta ma-detect ng laro
-if syn and syn.protect_gui then
-    syn.protect_gui(ScreenGui)
-    ScreenGui.Parent = game:GetService("CoreGui")
-elseif gethui then
-    ScreenGui.Parent = gethui()
-else
-    ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-end
+ScreenGui.Name = "TestHub_V2"
+ScreenGui.ResetOnSpawn = false
 
--- 2. Gumawa ng Main Frame (Ang mismong kahon)
+-- Anti-detect / Exploit compatibility
+if gethui then ScreenGui.Parent = gethui()
+elseif syn and syn.protect_gui then syn.protect_gui(ScreenGui); ScreenGui.Parent = game:GetService("CoreGui")
+else ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end
+
+-- 2. MAIN FRAME (Ang pinakamalaking kahon)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 200, 0, 100) -- Sukat: 200 width, 100 height
-MainFrame.Position = UDim2.new(0.5, -100, 0.5, -50) -- Gitna ng screen
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Dark Gray background
+MainFrame.Size = UDim2.new(0, 300, 0, 200)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- Mas madilim na tema
 MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true -- Pwede mo itong i-drag o galawin sa screen
 MainFrame.Parent = ScreenGui
 
--- Dagdag porma: Bilugan ang mga kanto ng Frame
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainFrame
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
 
--- 3. Gumawa ng TextLabel (Para sa salitang "Test")
-local TextLabel = Instance.new("TextLabel")
-TextLabel.Name = "TestLabel"
-TextLabel.Size = UDim2.new(1, 0, 1, 0) -- Sakop buong Main Frame
-TextLabel.BackgroundTransparency = 1 -- Transparent ang background ng text para lumitaw ang frame
-TextLabel.Text = "TEST"
-TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Puting teksto
-TextLabel.TextSize = 24
-TextLabel.Font = Enum.Font.SourceSansBold
-TextLabel.Parent = MainFrame
+-- 3. TOP BAR / HEADER (Dito hahawakan para i-drag)
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 8)
+TopCorner.Parent = TopBar
+
+-- Titulo sa Top Bar
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -40, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "TEST HUB V2"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+-- Close Button (X)
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 2.5)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Text = "✕"
+CloseButton.TextColor3 = Color3.fromRGB(255, 75, 75) -- Pulang 'X'
+CloseButton.TextSize = 18
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = TopBar
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy() -- Sisirain/Aalisin ang UI kapag kinlik
+end)
+
+-- 4. TOGGLE BUTTON (Sa loob ng Main Frame)
+local TestButton = Instance.new("TextButton")
+TestButton.Name = "TestButton"
+TestButton.Size = UDim2.new(0, 200, 0, 40)
+TestButton.Position = UDim2.new(0.5, -100, 0.5, -10)
+TestButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- Kulay Asul
+TestButton.Text = "Click Me!"
+TestButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TestButton.TextSize = 14
+TestButton.Font = Enum.Font.GothamBold
+TestButton.Parent = MainFrame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 6)
+ButtonCorner.Parent = TestButton
+
+-- Function kapag pinindot ang Button
+TestButton.MouseButton1Click:Connect(function()
+    print("V2 UI: Gumagana ang button test mo!")
+    -- Pwede mo palitan ang text kapag pinindot
+    if TestButton.Text == "Click Me!" then
+        TestButton.Text = "Activated!"
+        TestButton.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Magiging berde
+    else
+        TestButton.Text = "Click Me!"
+        TestButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- Babalik sa asul
+    end
+end)
+
+-- 5. SMOOTH DRAG SYSTEM (Para pwedeng galawin gamit ang TopBar)
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+TopBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
