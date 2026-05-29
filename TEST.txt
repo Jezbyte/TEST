@@ -1,0 +1,39 @@
+-- 1. Gumawa ng ScreenGui (Ang container ng UI)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "TestUI"
+-- Subukang i-protect ang UI para hindi basta ma-detect ng laro
+if syn and syn.protect_gui then
+    syn.protect_gui(ScreenGui)
+    ScreenGui.Parent = game:GetService("CoreGui")
+elseif gethui then
+    ScreenGui.Parent = gethui()
+else
+    ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- 2. Gumawa ng Main Frame (Ang mismong kahon)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 200, 0, 100) -- Sukat: 200 width, 100 height
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -50) -- Gitna ng screen
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Dark Gray background
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true -- Pwede mo itong i-drag o galawin sa screen
+MainFrame.Parent = ScreenGui
+
+-- Dagdag porma: Bilugan ang mga kanto ng Frame
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+-- 3. Gumawa ng TextLabel (Para sa salitang "Test")
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Name = "TestLabel"
+TextLabel.Size = UDim2.new(1, 0, 1, 0) -- Sakop buong Main Frame
+TextLabel.BackgroundTransparency = 1 -- Transparent ang background ng text para lumitaw ang frame
+TextLabel.Text = "TEST"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Puting teksto
+TextLabel.TextSize = 24
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.Parent = MainFrame
